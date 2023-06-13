@@ -7,7 +7,11 @@ function App() {
   const [error, setError] = useState("");
 
   const handleNumberClick = (value) => {
-    if (value === "." && input.includes(".")) return;
+    if (value === ".") {
+      const parts = input.split(/[-+*/]/);
+      const lastPart = parts[parts.length - 1];
+      if (lastPart.includes(".")) return;
+    }
 
     setInput((prevInput) => {
       if (prevInput === "0" && value !== ".") {
@@ -23,11 +27,20 @@ function App() {
     setInput((prevInput) => {
       if (
         prevInput.endsWith("+") ||
-        prevInput.endsWith("-") ||
         prevInput.endsWith("*") ||
         prevInput.endsWith("/")
       ) {
-        return prevInput.slice(0, -1) + operator;
+        if (operator === "-") {
+          return prevInput + operator;
+        } else {
+          return prevInput.slice(0, -1) + operator;
+        }
+      } else if (
+        prevInput.endsWith("-") &&
+        prevInput.length >= 2 &&
+        /[*+/-]/.test(prevInput[prevInput.length - 2])
+      ) {
+        return prevInput.slice(0, -2) + operator;
       } else if (prevInput === "" && operator === "-") {
         return operator;
       } else {
@@ -39,10 +52,8 @@ function App() {
 
   const handleEqualClick = () => {
     try {
-      // Use Function constructor to evaluate the expression safely
       const evaluatedResult = new Function(`return ${input}`)();
       const roundedResult = parseFloat(evaluatedResult.toFixed(4));
-
       setInput(roundedResult.toString());
       setResult(roundedResult.toString());
     } catch (error) {
